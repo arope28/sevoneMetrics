@@ -7,30 +7,19 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"sync"
-	"os"
-	"runtime/trace"
 
 	"github.com/wallix/awless/logger"
 )
 
-const url = "http://sevoneApiUrl/api/v2/"
-var now = time.Now()
-var endTime = now.Unix() * 1000
-var startTime = endTime - 300000
-var c = make(chan string)
-var wg sync.WaitGroup
-var wg2 sync.WaitGroup
-var wg3 sync.WaitGroup
-//var wg4 sync.WaitGroup
+const url = "http://sevone-dt-a4s.downingtown.pa.comcast.net/api/v2/"
 
 //Device in SevOne API
 type Device struct {
-	TotalElements int `json:"totalElements"`
+	TotalElements int             `json:"totalElements"`
 	DeviceContent []DeviceContent `json:"content"`
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPages"`
+	PageNumber    int             `json:"pageNumber"`
+	PageSize      int             `json:"pageSize"`
+	TotalPages    int             `json:"totalPages"`
 }
 
 //DeviceContent in SevOne API
@@ -57,15 +46,15 @@ type DeviceContent struct {
 	PluginInfo               interface{} `json:"pluginInfo"`
 	Objects                  interface{} `json:"objects"`
 	PluginManagerID          interface{} `json:"pluginManagerId"`
-} 
+}
 
 //Object in SevOne API
 type Object struct {
-	TotalElements int `json:"totalElements"`
+	TotalElements int             `json:"totalElements"`
 	ObjectContent []ObjectContent `json:"content"`
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPages"`
+	PageNumber    int             `json:"pageNumber"`
+	PageSize      int             `json:"pageSize"`
+	TotalPages    int             `json:"totalPages"`
 }
 
 //ObjectContent in SevOne API
@@ -91,16 +80,16 @@ type ObjectContent struct {
 		PacketSize     string `json:"packetSize"`
 		DeviceID       string `json:"deviceId"`
 		ObjectID       string `json:"objectId"`
-	} `json:"extendedInfo"` 
+	} `json:"extendedInfo"`
 }
 
 //Indicator in SevOne API
 type Indicator struct {
-	TotalElements int `json:"totalElements"`
+	TotalElements    int                `json:"totalElements"`
 	IndicatorContent []IndicatorContent `json:"content"`
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPages"`
+	PageNumber       int                `json:"pageNumber"`
+	PageSize         int                `json:"pageSize"`
+	TotalPages       int                `json:"totalPages"`
 }
 
 //IndicatorContent in SevOne API
@@ -131,7 +120,7 @@ type IndicatorContent struct {
 }
 
 //Metric in SevOne API
-type Metric []struct {
+type Metric struct {
 	Value float64 `json:"value"`
 	Time  int64   `json:"time"`
 	Focus int     `json:"focus"`
@@ -140,7 +129,7 @@ type Metric []struct {
 func authToken() string {
 	urlget := url + "authentication/signin?nmsLogin=false"
 
-	payload := strings.NewReader("{\n\t\"name\": \"username\",\n\t\"password\": \"password\"\n}")
+	payload := strings.NewReader("{\n\t\"name\": \"aroper001\",\n\t\"password\": \"c1w099AR1\"\n}")
 
 	req, _ := http.NewRequest("POST", urlget, payload)
 
@@ -167,7 +156,7 @@ func authToken() string {
 		logger.Error("Error143: ", err)
 	}
 	token := jsonb["token"]
-	//logger.Info("Obtained token")
+	logger.Info("Obtained token")
 
 	return token
 }
@@ -199,113 +188,70 @@ func getDevices(t string) []byte {
 }
 
 //function to get list of objects for each device (url, token, cookie, object)
-func getObjects(t string, d DeviceContent, c chan string) {
-		urlget := fmt.Sprintf("%s%s%d%s", url, "devices/", d.ID, "/objects?size=10000")
+func getObjects(t string, d int) []byte {
+	urlget := fmt.Sprintf("%s%s%d%s", url, "devices/", d, "/objects?size=10000")
 
-		req, _ := http.NewRequest("GET", urlget, nil)
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("x-auth-token", t)
+	req, _ := http.NewRequest("GET", urlget, nil)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("x-auth-token", t)
 
-		res, err1 := http.DefaultClient.Do(req)
-		if err1 != nil {
-			logger.Error(err1)
-		}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Error(err)
+	}
 
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-		
-		byt2 := []byte(body)
-		var o Object
-		err2 := json.Unmarshal(byt2, &o)
-		if err2 != nil {
-			fmt.Println("214: ", err2)
-			return
-		}
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
 
-		for object := range o.ObjectContent {
-			wg2.Add(1)
-			go getIndicators(t, d.Name, d.ID, o.ObjectContent[object], c)
-			//defer wg2.Done()
-			//time.Sleep(1 * time.Second)		
-		}
-		//wg2.Wait()
-		//wg.Done()
+	return body
 }
 
 //function to get list of indicators for each object (url, object, device, objectindicator)
-func getIndicators(t string, dn string, d int, o ObjectContent, c chan string) {
-		urlget := fmt.Sprintf("%s%s%d%s%d%s", url, "devices/", d, "/objects/", o.ID, "/indicators?size=10000")
+func getIndicators(t string, d int, o int) []byte {
+	urlget := fmt.Sprintf("%s%s%d%s%d%s", url, "devices/", d, "/objects/", o, "/indicators?size=10000")
 
-		req, _ := http.NewRequest("GET", urlget, nil)
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("x-auth-token", t)
+	req, _ := http.NewRequest("GET", urlget, nil)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("x-auth-token", t)
 
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			logger.Error(err)
-		}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Error(err)
+	}
 
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-		byt3 := []byte(body)
-		var i Indicator
-		err3 := json.Unmarshal(byt3, &i)
-		if err3 != nil {
-			fmt.Println("244: ", err)
-			return
-		}
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
 
-
-		for indicator := range i.IndicatorContent {
-			wg3.Add(1)
-			go getIndicatorMetric(t, dn, d, o.Name, o.ID, i.IndicatorContent[indicator], c, startTime, endTime)	
-			//defer wg3.Done()
-			//time.Sleep(1 * time.Second)
-		}	
-		wg2.Done()
+	return body
 }
 
 //function to get metric value(s) for each indicator (url, token, cookie, indicator)
-func getIndicatorMetric(t string, dn string, d int, on string, o int, i IndicatorContent, c chan string, startTime int64, endTime int64) {
-		urlget := fmt.Sprintf("%s%s%d%s%d%s%d%s%d%s%d", url, "devices/", d, "/objects/", o, "/indicators/", i.ID, "/data?startTime=", startTime, "&endTime=", endTime)
-		//fmt.Println(urlget)
-		req, _ := http.NewRequest("GET", urlget, nil)
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("x-auth-token", t)
+func getIndicatorMetric(t string, d int, o int, i int, startTime int64, endTime int64) []byte {
+	urlget := fmt.Sprintf("%s%s%d%s%d%s%d%s%d%s%d", url, "devices/", d, "/objects/", o, "/indicators/", i, "/data?startTime=", startTime, "&endTime=", endTime)
 
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			logger.Error(err)
-		}
+	req, _ := http.NewRequest("GET", urlget, nil)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("x-auth-token", t)
 
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-		byt4 := []byte(body)
-		var m Metric
-		//for range m {
-		err4 := json.Unmarshal(byt4, &m)
-		if err4 != nil {
-			fmt.Println("274: ", err)
-			return
-		}
-		
-		
-		//fmt.Println(dn, on, i.Name)
-		for metric := range m {
-			//wg4.Add(1)
-			//fmt.Println(fmt.Sprintf("%s.%s.%s: %f", dn, on, i.Name, m[metric].Value))
-			//c <- fmt.Sprintf("%s.%s.%s: %f", dn, on, i.Name, m[metric].Value))
-			c <- fmt.Sprintf("%s.%s: %f", dn, i.Name, m[metric].Value)
-		}
-		wg3.Done()
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Error(err)
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	return body
 }
 
 func main() {
 
-	trace.Start(os.Stderr)
-	defer trace.Stop()
+	now := time.Now()
+	endTime := now.Unix() * 1000
+	startTime := endTime - 300000
+
 	token := authToken()
-	
+
 	msg := getDevices(token)
 
 	//Unmarshal "devices" json string into a list of device IDs (int) as "device"
@@ -313,38 +259,47 @@ func main() {
 	var d Device
 	err := json.Unmarshal(byt, &d)
 	if err != nil {
-		fmt.Println("295: ", err)
+		fmt.Println(err)
 		return
 	}
 
 	//might be good to use goroutines and channels below - research
 	//var c chan []byte = make(chan []byte)
-	
-	defer close(c)
-
 	for device := range d.DeviceContent {
-		logger.Info("Pulling device", d.DeviceContent[device].Name)
-		wg.Add(1)
-		go func() {
-			getObjects(token, d.DeviceContent[device], c)
-		}()
-		Print(c, &wg)
-		//defer wg.Done()
-	}
+		msg2 := getObjects(token, d.DeviceContent[device].ID)
+		byt2 := []byte(msg2)
+		var o Object
+		err := json.Unmarshal(byt2, &o)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for object := range o.ObjectContent {
+			msg3 := getIndicators(token, d.DeviceContent[device].ID, o.ObjectContent[object].ID)
+			byt3 := []byte(msg3)
+			var i Indicator
+			err := json.Unmarshal(byt3, &i)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			for indicator := range i.IndicatorContent {
+				msg4 := getIndicatorMetric(token, d.DeviceContent[device].ID, o.ObjectContent[object].ID, i.IndicatorContent[indicator].ID, startTime, endTime)
+				byt4 := []byte(msg4)
+				var m []Metric
+				err := json.Unmarshal(byt4, &m)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				for metric := range m {
+					fmt.Println(fmt.Sprintf("%s.%s.%s: %f", d.DeviceContent[device].Name, o.ObjectContent[object].Name, i.IndicatorContent[indicator].Name, m[metric].Value))
+				}
+			}
+		}
 
-	//wg.Wait()
-	
-	//time.Sleep(90 * time.Second)
-	
-	//logger.Info("Script finished running.")
+	}
+	fmt.Println("Stop")
 	elapsed := time.Since(now)
 	fmt.Println(elapsed)
-}
-
-//Print prints the contents of channel c
-func Print(c <-chan string, wg *sync.WaitGroup) {
-	for n := range c { // reads from channel until it's closed
-        fmt.Println(n)
-    }            
-    defer wg.Done()
 }
