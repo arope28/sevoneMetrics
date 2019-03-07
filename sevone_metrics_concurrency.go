@@ -192,7 +192,7 @@ func getDevices(t string) []byte {
 
 //function to get list of objects for each device (url, token, cookie, object)
 func getObjects(t string, d int) []byte {
-	urlget := fmt.Sprintf("%s%s%d%s", url, "devices/", d, "/objects")
+	urlget := fmt.Sprintf("%s%s%d%s", url, "devices/", d, "/objects?size=10000")
 
 	req, _ := http.NewRequest("GET", urlget, nil)
 	req.Header.Add("Accept", "application/json")
@@ -211,7 +211,7 @@ func getObjects(t string, d int) []byte {
 
 //function to get list of indicators for each object (url, object, device, objectindicator)
 func getIndicators(t string, d int, o int) []byte {
-	urlget := fmt.Sprintf("%s%s%d%s%d%s", url, "devices/", d, "/objects/", o, "/indicators")
+	urlget := fmt.Sprintf("%s%s%d%s%d%s", url, "devices/", d, "/objects/", o, "/indicators?size=10000")
 
 	req, _ := http.NewRequest("GET", urlget, nil)
 	req.Header.Add("Accept", "application/json")
@@ -273,7 +273,7 @@ func main() {
 
 	//sem represents semaphore so we can isolate goroutines
 	totalDevices := len(d.DeviceContent)
-	concurrency := 10
+	concurrency := 4
 	semDev := make(chan bool, concurrency)
 
 	fmt.Println("{")
@@ -294,7 +294,7 @@ func main() {
 			}
 			
 			totalObjects := len(o.ObjectContent)
-			concurrency2 := 10
+			concurrency2 := 8
 			semObj := make(chan bool, concurrency2)
 
 			for object := 0; object < totalObjects; object++ {
