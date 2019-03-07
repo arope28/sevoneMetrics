@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/arope28/sevoneMetrics)](https://goreportcard.com/report/github.com/arope28/sevoneMetrics) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gojp/goreportcard/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/arope28/sevoneMetrics)](https://goreportcard.com/report/github.com/arope28/sevoneMetrics) [![License](https://img.shields.io/cran/l/:packageName.svg)](https://github.com/arope28/sevoneMetrics/LICENSE.md)
 # sevoneMetrics
 
 - *sevone_metrics.go* is WIP - it's supposed to have concurrency added, but it's not there yet
