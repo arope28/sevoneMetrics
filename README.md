@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/arope28/sevoneMetrics](https://goreportcard.com/report/github.com/arope28/sevoneMetrics)
+[![Go Report Card](https://goreportcard.com/badge/github.com/arope28/sevoneMetrics]
 
 # sevoneMetrics
 
