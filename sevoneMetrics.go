@@ -11,7 +11,7 @@ import (
 	"github.com/wallix/awless/logger"
 )
 
-const url = "http://sevone-dt-a4s.downingtown.pa.comcast.net/api/v2/"
+const url = "http://sevoneURL/api/v2/"
 
 //Device in SevOne API
 type Device struct {
@@ -129,7 +129,7 @@ type Metric struct {
 func authToken() string {
 	urlget := url + "authentication/signin?nmsLogin=false"
 
-	payload := strings.NewReader("{\n\t\"name\": \"aroper001\",\n\t\"password\": \"c1w099AR1\"\n}")
+	payload := strings.NewReader("{\n\t\"name\": \"username\",\n\t\"password\": \"password\"\n}")
 
 	req, _ := http.NewRequest("POST", urlget, payload)
 
