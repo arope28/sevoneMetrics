@@ -17,11 +17,11 @@ const url = "http://sevoneURL/api/v2/"
 
 //Device in SevOne API
 type Device struct {
-	TotalElements int `json:"totalElements"`
+	TotalElements int             `json:"totalElements"`
 	DeviceContent []DeviceContent `json:"content"`
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPages"`
+	PageNumber    int             `json:"pageNumber"`
+	PageSize      int             `json:"pageSize"`
+	TotalPages    int             `json:"totalPages"`
 }
 
 //DeviceContent in SevOne API
@@ -48,15 +48,15 @@ type DeviceContent struct {
 	PluginInfo               interface{} `json:"pluginInfo"`
 	Objects                  interface{} `json:"objects"`
 	PluginManagerID          interface{} `json:"pluginManagerId"`
-} 
+}
 
 //Object in SevOne API
 type Object struct {
-	TotalElements int `json:"totalElements"`
+	TotalElements int             `json:"totalElements"`
 	ObjectContent []ObjectContent `json:"content"`
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPages"`
+	PageNumber    int             `json:"pageNumber"`
+	PageSize      int             `json:"pageSize"`
+	TotalPages    int             `json:"totalPages"`
 }
 
 //ObjectContent in SevOne API
@@ -82,16 +82,16 @@ type ObjectContent struct {
 		PacketSize     string `json:"packetSize"`
 		DeviceID       string `json:"deviceId"`
 		ObjectID       string `json:"objectId"`
-	} `json:"extendedInfo"` 
+	} `json:"extendedInfo"`
 }
 
 //Indicator in SevOne API
 type Indicator struct {
-	TotalElements int `json:"totalElements"`
+	TotalElements    int                `json:"totalElements"`
 	IndicatorContent []IndicatorContent `json:"content"`
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
-	TotalPages int `json:"totalPages"`
+	PageNumber       int                `json:"pageNumber"`
+	PageSize         int                `json:"pageSize"`
+	TotalPages       int                `json:"totalPages"`
 }
 
 //IndicatorContent in SevOne API
@@ -200,7 +200,7 @@ func getObjects(t string, d int) []byte {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Error("getObjects1: ",  err)
+		logger.Error("getObjects1: ", err)
 	}
 
 	defer res.Body.Close()
@@ -258,7 +258,7 @@ func main() {
 
 	//get AuthToken to use for the API GET calls that follow
 	token := authToken()
-	
+
 	//get list of Devices
 	msg := getDevices(token)
 
@@ -278,13 +278,13 @@ func main() {
 
 	fmt.Println("{")
 
-	for device := 0; device < totalDevices; device++ { 
+	for device := 0; device < totalDevices; device++ {
 		semDev <- true
-		
+
 		//create "localDevice" variable for use within goroutine so "device" doesn't change value
 		localDevice := device
 		go func(current int) {
-			msg2 :=  getObjects(token, d.DeviceContent[localDevice].ID)
+			msg2 := getObjects(token, d.DeviceContent[localDevice].ID)
 			byt2 := []byte(msg2)
 			var o Object
 			err := json.Unmarshal(byt2, &o)
@@ -292,14 +292,14 @@ func main() {
 				fmt.Println(err)
 				return
 			}
-			
+
 			totalObjects := len(o.ObjectContent)
 			concurrency2 := 8
 			semObj := make(chan bool, concurrency2)
 
 			for object := 0; object < totalObjects; object++ {
 				semObj <- true
-				
+
 				localObject := object
 				go func(current int) {
 					msg3 := getIndicators(token, d.DeviceContent[localDevice].ID, o.ObjectContent[localObject].ID)
@@ -310,11 +310,11 @@ func main() {
 						fmt.Println(err)
 						return
 					}
-					
+
 					totalIndicators := len(i.IndicatorContent)
 					concurrency3 := 10
 					semInd := make(chan bool, concurrency3)
-					
+
 					for indicator := 0; indicator < totalIndicators; indicator++ {
 						semInd <- true
 
@@ -333,7 +333,7 @@ func main() {
 								fmt.Println(fmt.Sprintf("  \"%s|ST[device:%s,object:%s\": "+"\"%f\",", i.IndicatorContent[localIndicator].Name, d.DeviceContent[localDevice].Name, o.ObjectContent[localObject].Name, m[metric].Value))
 							}
 							<-semInd
-						}(indicator)	
+						}(indicator)
 					}
 					for i := 0; i < cap(semInd); i++ {
 						semInd <- true
@@ -345,7 +345,7 @@ func main() {
 				semObj <- true
 			}
 			<-semDev
-		}(device) 
+		}(device)
 	}
 	for i := 0; i < cap(semDev); i++ {
 		semDev <- true
