@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/arope28/sevoneMetrics](https://goreportcard.com/report/github.com/arope28/sevoneMetrics)
+
 # sevoneMetrics
 
 - *sevone_metrics.go* is WIP - it's supposed to have concurrency added, but it's not there yet
