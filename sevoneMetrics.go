@@ -200,7 +200,7 @@ func getDevices(t string) []byte {
 
 //function to get list of objects for each device (url, token, cookie, object)
 func getObjects(t string, d DeviceContent, c chan string) {
-		urlget := fmt.Sprintf("%s%s%d%s", url, "devices/", d.ID, "/objects")
+		urlget := fmt.Sprintf("%s%s%d%s", url, "devices/", d.ID, "/objects?size=10000")
 
 		req, _ := http.NewRequest("GET", urlget, nil)
 		req.Header.Add("Accept", "application/json")
@@ -234,7 +234,7 @@ func getObjects(t string, d DeviceContent, c chan string) {
 
 //function to get list of indicators for each object (url, object, device, objectindicator)
 func getIndicators(t string, dn string, d int, o ObjectContent, c chan string) {
-		urlget := fmt.Sprintf("%s%s%d%s%d%s", url, "devices/", d, "/objects/", o.ID, "/indicators")
+		urlget := fmt.Sprintf("%s%s%d%s%d%s", url, "devices/", d, "/objects/", o.ID, "/indicators?size=10000")
 
 		req, _ := http.NewRequest("GET", urlget, nil)
 		req.Header.Add("Accept", "application/json")
