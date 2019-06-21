@@ -135,9 +135,10 @@ func authToken() string {
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("content-type", "application/json")
-	res, err := http.DefaultClient.Do(req)
+	var myClient = &http.Client{Timeout: 60 * time.Second}
+	res, err := myClient.Do(req)
 	if err != nil {
-		logger.Error(err)
+		log.Fatal("Error timeout")
 	}
 
 	defer res.Body.Close()
@@ -169,9 +170,9 @@ func getDevices(t string) []byte {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("x-auth-token", t)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := myClient.Do(req)
 	if err != nil {
-		logger.Error(err)
+		log.Fatal("Error timeout")
 	}
 
 	defer res.Body.Close()
@@ -195,9 +196,9 @@ func getObjects(t string, d int) []byte {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("x-auth-token", t)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := myClient.Do(req)
 	if err != nil {
-		logger.Error(err)
+		log.Fatal("Error timeout")
 	}
 
 	defer res.Body.Close()
@@ -214,9 +215,9 @@ func getIndicators(t string, d int, o int) []byte {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("x-auth-token", t)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := myClient.Do(req)
 	if err != nil {
-		logger.Error(err)
+		log.Fatal("Error timeout")
 	}
 
 	defer res.Body.Close()
@@ -233,9 +234,9 @@ func getIndicatorMetric(t string, d int, o int, i int, startTime int64, endTime 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("x-auth-token", t)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := myClient.Do(req)
 	if err != nil {
-		logger.Error(err)
+		log.Fatal("Error timeout")
 	}
 
 	defer res.Body.Close()
